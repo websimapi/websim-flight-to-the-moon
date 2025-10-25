@@ -3,61 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Bird Flight</title>
+    <title>Flight to the Moon</title>
     <link rel="stylesheet" href="style.css">
-    <script type="importmap">
-    {
-      "imports": {
-        "nipplejs": "https://esm.sh/nipplejs"
-      }
-    }
-    </script>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        <div id="ui-layer">
-            <div id="start-screen" class="screen">
-                <h1>Bird Flight</h1>
-                <p>Select your bird:</p>
-                <div id="character-selection">
-                    <div class="char-option" data-char="hummingbird">
-                        <img src="/hummingbird.png" alt="Hummingbird">
-                        <p>Hummingbird</p>
-                        <small>Fast Speed, Low Agility</small>
-                    </div>
-                    <div class="char-option" data-char="sparrow">
-                        <img src="/sparrow.png" alt="Sparrow">
-                        <p>Sparrow</p>
-                        <small>Balanced</small>
-                    </div>
-                    <div class="char-option" data-char="eagle">
-                        <img src="/eagle.png" alt="Eagle">
-                        <p>Eagle</p>
-                        <small>Slow Speed, High Agility</small>
-                    </div>
+    <div id="ui-container">
+        <div id="altitude-display">Altitude: 0 ft</div>
+        <div id="character-selection">
+            <h1>Select Your Bird</h1>
+            <div class="char-options">
+                <div class="char-option" data-bird="sparrow">
+                    <img src="sparrow.png" alt="Sparrow">
+                    <h2>Sparrow</h2>
+                    <p>Balanced flight</p>
                 </div>
-                 <button id="start-game-btn">Start Game</button>
+                <div class="char-option" data-bird="eagle">
+                    <img src="eagle.png" alt="Eagle">
+                    <h2>Eagle</h2>
+                    <p>Fast ascent, slow turns</p>
+                </div>
+                <div class="char-option" data-bird="hummingbird">
+                    <img src="hummingbird.png" alt="Hummingbird">
+                    <h2>Hummingbird</h2>
+                    <p>Slow ascent, fast turns</p>
+                </div>
             </div>
-
-            <div id="hud" class="hidden">
-                <div id="score">Altitude: 0 ft</div>
-            </div>
-
-            <div id="end-screen" class="screen hidden">
-                <h2 id="end-title">Game Over</h2>
-                <p id="end-score">You reached 0 ft</p>
-                <button id="restart-btn">Try Again</button>
-            </div>
-
-            <div id="pause-button" class="hidden">❚❚</div>
-            <div id="unpause-button" class="hidden">▶</div>
-
+        </div>
+        <div id="game-over-screen">
+            <h1>Game Over</h1>
+            <p>You flew <span id="final-altitude">0</span> ft.</p>
+            <button id="restart-button">Try Again</button>
+        </div>
+         <div id="win-screen">
+            <h1>You Reached the Moon!</h1>
+            <p>Congratulations!</p>
+            <button id="play-again-button">Play Again</button>
         </div>
     </div>
-    <div id="mobile-controls" class="hidden">
-      <div id="joystick-zone"></div>
-    </div>
+    <canvas id="game-canvas"></canvas>
     <script type="module" src="main.js"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
