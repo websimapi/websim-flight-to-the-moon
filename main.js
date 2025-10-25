@@ -31,7 +31,7 @@ let backgroundPatterns = {};
 let playerImage, obstacleImages = {};
 let targetX = null;
 let lastTime = 0;
-let bgY = [0, 0];
+let bgY = 0;
 
 const sounds = {};
 
@@ -41,7 +41,7 @@ function loadAssets() {
     // Images
     const imageUrls = {
         sparrow: 'sparrow.png', eagle: 'eagle.png', hummingbird: 'hummingbird.png',
-        forest_bg: 'forest_bg.png', sky_bg: 'sky_bg.png', space_bg: 'space_bg.png', forest_top_bg: 'forest_top_bg.png',
+        forest_bg: 'forest_bg.png', sky_bg: 'sky_bg.png', space_bg: 'space_bg.png',
         nut: 'nut.png', raindrop: 'raindrop.png', asteroid: 'asteroid.png',
         moon: 'moon.png'
     };
@@ -88,7 +88,7 @@ function resizeCanvas() {
     canvasHeight = window.innerHeight;
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
-    bgY = [0, -canvasHeight]; // This might not be needed with patterns, but let's keep it for now.
+    bgY = 0;
     
     // Re-create patterns if canvas size matters for them (it doesn't for 'repeat')
     // and if ctx state is reset. Good practice to update.
@@ -146,10 +146,8 @@ function update(dt) {
 
     // Update background scroll
     const scrollSpeed = currentSpeed;
-    bgY[0] += scrollSpeed * dt;
-    bgY[1] += scrollSpeed * dt;
-    if (bgY[0] >= canvasHeight) bgY[0] = bgY[1] - canvasHeight;
-    if (bgY[1] >= canvasHeight) bgY[1] = bgY[0] - canvasHeight;
+    bgY = (bgY + scrollSpeed * dt) % canvasHeight;
+
 
     // Update obstacles
     obstacles.forEach(obs => {
@@ -217,13 +215,16 @@ function draw() {
     const transitionDuration = LEVELS.SKY.altitude - forestTopTransitionAltitude;
 
     ctx.save();
-    ctx.translate(0, bgY[0]);
+    // The translation now uses bgY and will wrap around, creating an infinite scroll.
+    ctx.translate(0, bgY);
     
     if (altitude < forestTopTransitionAltitude) {
         bgPattern = backgroundPatterns.forest_bg;
         if (bgPattern) {
             ctx.fillStyle = bgPattern;
-            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+            // Draw two copies to ensure seamless scrolling
+            ctx.fillRect(0, -bgY, canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY - canvasHeight, canvasWidth, canvasHeight);
         }
     } else if (altitude >= forestTopTransitionAltitude && altitude < LEVELS.SKY.altitude) {
         const transitionProgress = (altitude - forestTopTransitionAltitude) / transitionDuration;
@@ -231,13 +232,15 @@ function draw() {
         // Draw forest bg
         if (backgroundPatterns.forest_bg) {
             ctx.fillStyle = backgroundPatterns.forest_bg;
-            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY, canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY - canvasHeight, canvasWidth, canvasHeight);
         }
-        // Draw forest top bg, fading in
-        if (backgroundPatterns.forest_top_bg) {
+        // Draw sky bg on top, fading in
+        if (backgroundPatterns.sky_bg) {
             ctx.globalAlpha = transitionProgress;
-            ctx.fillStyle = backgroundPatterns.forest_top_bg;
-            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+            ctx.fillStyle = backgroundPatterns.sky_bg;
+            ctx.fillRect(0, -bgY, canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY - canvasHeight, canvasWidth, canvasHeight);
             ctx.globalAlpha = 1;
         }
 
@@ -245,13 +248,15 @@ function draw() {
         bgPattern = backgroundPatterns.sky_bg;
         if (bgPattern) {
             ctx.fillStyle = bgPattern;
-            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY, canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY - canvasHeight, canvasWidth, canvasHeight);
         }
     } else { // SPACE
         bgPattern = backgroundPatterns.space_bg;
         if (bgPattern) {
             ctx.fillStyle = bgPattern;
-            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY, canvasWidth, canvasHeight);
+            ctx.fillRect(0, -bgY - canvasHeight, canvasWidth, canvasHeight);
         }
     }
 
