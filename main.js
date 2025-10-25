@@ -27,6 +27,7 @@ const LEVELS = {
 let gameState = 'char-select'; // char-select, playing, game-over, win
 let player, obstacles, altitude, currentLevel;
 let backgrounds = {};
+let backgroundPatterns = {};
 let playerImage, obstacleImages = {};
 let targetX = null;
 let lastTime = 0;
@@ -49,7 +50,10 @@ function loadAssets() {
         promises.push(new Promise(resolve => {
             const img = new Image();
             img.onload = () => {
-                if(key.includes('_bg')) backgrounds[key] = img;
+                if(key.includes('_bg')) {
+                    backgrounds[key] = img;
+                    backgroundPatterns[key] = ctx.createPattern(img, 'repeat');
+                }
                 else if (BIRD_STATS[key]) BIRD_STATS[key].image = img;
                 else if (key === 'moon') backgrounds[key] = img;
                 else obstacleImages[key] = img;
@@ -84,7 +88,17 @@ function resizeCanvas() {
     canvasHeight = window.innerHeight;
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
-    bgY = [0, -canvasHeight];
+    bgY = [0, -canvasHeight]; // This might not be needed with patterns, but let's keep it for now.
+    
+    // Re-create patterns if canvas size matters for them (it doesn't for 'repeat')
+    // and if ctx state is reset. Good practice to update.
+    if (Object.keys(backgrounds).length > 0) {
+        for (const key in backgrounds) {
+            if (key.includes('_bg')) {
+                 backgroundPatterns[key] = ctx.createPattern(backgrounds[key], 'repeat');
+            }
+        }
+    }
 }
 
 function initGame(birdType) {
@@ -196,23 +210,50 @@ function draw() {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     // Draw background
-    let bgImage;
+    let bgPattern;
     const forestTopTransitionAltitude = LEVELS.SKY.altitude - 500; // Start transition 500ft before sky level
+    const transitionDuration = LEVELS.SKY.altitude - forestTopTransitionAltitude;
 
-    if (altitude >= LEVELS.SPACE.altitude) {
-        bgImage = backgrounds.space_bg;
-    } else if (altitude >= LEVELS.SKY.altitude) {
-        bgImage = backgrounds.sky_bg;
-    } else if (altitude >= forestTopTransitionAltitude) {
-        bgImage = backgrounds.forest_top_bg;
-    } else {
-        bgImage = backgrounds.forest_bg;
-    }
+    ctx.save();
+    ctx.translate(0, bgY[0]);
     
-    if (bgImage) {
-        ctx.drawImage(bgImage, 0, bgY[0], canvasWidth, canvasHeight);
-        ctx.drawImage(bgImage, 0, bgY[1], canvasWidth, canvasHeight);
+    if (altitude < forestTopTransitionAltitude) {
+        bgPattern = backgroundPatterns.forest_bg;
+        if (bgPattern) {
+            ctx.fillStyle = bgPattern;
+            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+        }
+    } else if (altitude >= forestTopTransitionAltitude && altitude < LEVELS.SKY.altitude) {
+        const transitionProgress = (altitude - forestTopTransitionAltitude) / transitionDuration;
+        
+        // Draw forest bg
+        if (backgroundPatterns.forest_bg) {
+            ctx.fillStyle = backgroundPatterns.forest_bg;
+            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+        }
+        // Draw forest top bg, fading in
+        if (backgroundPatterns.forest_top_bg) {
+            ctx.globalAlpha = transitionProgress;
+            ctx.fillStyle = backgroundPatterns.forest_top_bg;
+            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+            ctx.globalAlpha = 1;
+        }
+
+    } else if (altitude >= LEVELS.SKY.altitude && altitude < LEVELS.SPACE.altitude) {
+        bgPattern = backgroundPatterns.sky_bg;
+        if (bgPattern) {
+            ctx.fillStyle = bgPattern;
+            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+        }
+    } else { // SPACE
+        bgPattern = backgroundPatterns.space_bg;
+        if (bgPattern) {
+            ctx.fillStyle = bgPattern;
+            ctx.fillRect(0, -bgY[0], canvasWidth, canvasHeight);
+        }
     }
+
+    ctx.restore();
     
     if (gameState !== 'playing') return;
 
