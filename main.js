@@ -12,15 +12,15 @@ const playAgainButton = document.getElementById('play-again-button');
 let canvasWidth, canvasHeight;
 
 const BIRD_STATS = {
-    sparrow: { speed: 100, agility: 5, img: 'sparrow.png' },
-    eagle: { speed: 150, agility: 3, img: 'eagle.png' },
-    hummingbird: { speed: 75, agility: 8, img: 'hummingbird.png' }
+    sparrow: { speed: 50, agility: 5, img: 'sparrow.png' },
+    eagle: { speed: 75, agility: 3, img: 'eagle.png' },
+    hummingbird: { speed: 40, agility: 8, img: 'hummingbird.png' }
 };
 
 const LEVELS = {
-    FOREST: { altitude: 0, bg: 'forest_bg.png', obstacle: 'nut.png', obsSpeed: 200 },
-    SKY: { altitude: 1000, bg: 'sky_bg.png', obstacle: 'raindrop.png', obsSpeed: 350 },
-    SPACE: { altitude: 5000, bg: 'space_bg.png', obstacle: 'asteroid.png', obsSpeed: 500 },
+    FOREST: { altitude: 0, bg: 'forest_bg.png', obstacle: 'nut.png', obsSpeed: 200, speedMultiplier: 1.0 },
+    SKY: { altitude: 1000, bg: 'sky_bg.png', obstacle: 'raindrop.png', obsSpeed: 350, speedMultiplier: 1.5 },
+    SPACE: { altitude: 5000, bg: 'space_bg.png', obstacle: 'asteroid.png', obsSpeed: 500, speedMultiplier: 2.0 },
     MOON: { altitude: 15000 }
 };
 
@@ -108,7 +108,7 @@ function initGame(birdType) {
         y: canvasHeight - 150,
         width: 60,
         height: 60,
-        speed: stats.speed, // pixels (altitude) per second
+        baseSpeed: stats.speed, // pixels (altitude) per second
         agility: stats.agility,
         image: stats.image
     };
@@ -129,8 +129,10 @@ function initGame(birdType) {
 function update(dt) {
     if (gameState !== 'playing') return;
 
+    const currentSpeed = player.baseSpeed * currentLevel.speedMultiplier;
+
     // Update altitude
-    altitude += player.speed * dt;
+    altitude += currentSpeed * dt;
     altitudeDisplay.textContent = `Altitude: ${Math.floor(altitude)} ft`;
 
     // Update player horizontal position
@@ -143,7 +145,7 @@ function update(dt) {
     player.x = Math.max(player.width/2, Math.min(canvasWidth - player.width/2, player.x));
 
     // Update background scroll
-    const scrollSpeed = player.speed;
+    const scrollSpeed = currentSpeed;
     bgY[0] += scrollSpeed * dt;
     bgY[1] += scrollSpeed * dt;
     if (bgY[0] >= canvasHeight) bgY[0] = bgY[1] - canvasHeight;
