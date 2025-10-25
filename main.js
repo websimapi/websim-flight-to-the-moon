@@ -30,6 +30,7 @@ let backgrounds = {};
 let backgroundPatterns = {};
 let playerImage, obstacleImages = {};
 let targetX = null;
+let targetY = null;
 let lastTime = 0;
 let bgY = 0;
 
@@ -105,7 +106,7 @@ function initGame(birdType) {
     const stats = BIRD_STATS[birdType];
     player = {
         x: canvasWidth / 2,
-        y: canvasHeight - 150,
+        y: canvasHeight - 100,
         width: 60,
         height: 60,
         baseSpeed: stats.speed, // pixels (altitude) per second
@@ -113,6 +114,7 @@ function initGame(birdType) {
         image: stats.image
     };
     targetX = player.x;
+    targetY = player.y;
     altitude = 0;
     obstacles = [];
     currentLevel = LEVELS.FOREST;
@@ -129,25 +131,36 @@ function initGame(birdType) {
 function update(dt) {
     if (gameState !== 'playing') return;
 
-    const currentSpeed = player.baseSpeed * currentLevel.speedMultiplier;
+    // Player vertical position affects speed
+    // yFactor is 0 at the bottom of the screen, 1 at the top
+    const yFactor = Math.max(0, (canvasHeight - player.y) / canvasHeight);
+    
+    // speedModifier ranges from 0.5 (at screen bottom) to 2.0 (at screen top)
+    const speedModifier = 0.5 + (yFactor * 1.5);
+    const ascentSpeed = player.baseSpeed * currentLevel.speedMultiplier * speedModifier;
 
     // Update altitude
-    altitude += currentSpeed * dt;
+    altitude += ascentSpeed * dt;
     altitudeDisplay.textContent = `Altitude: ${Math.floor(altitude)} ft`;
 
-    // Update player horizontal position
+    // Update player position
     const dx = targetX - player.x;
+    const dy = targetY - player.y;
+
     if (Math.abs(dx) > 1) {
         player.x += dx * player.agility * dt;
+    }
+     if (Math.abs(dy) > 1) {
+        player.y += dy * player.agility * dt;
     }
 
     // Clamp player position
     player.x = Math.max(player.width/2, Math.min(canvasWidth - player.width/2, player.x));
+    player.y = Math.max(player.height/2, Math.min(canvasHeight - player.height/2, player.y));
 
     // Update background scroll
-    const scrollSpeed = currentSpeed;
-    bgY = (bgY + scrollSpeed * dt) % canvasHeight;
-
+    const scrollSpeed = ascentSpeed;
+    bgY = (bgY + scrollSpeed * dt); // No modulo here for smoother transitions
 
     // Update obstacles
     obstacles.forEach(obs => {
@@ -213,6 +226,10 @@ function draw() {
     let bgPattern;
     const forestTopTransitionAltitude = LEVELS.SKY.altitude - 500; // Start transition 500ft before sky level
     const transitionDuration = LEVELS.SKY.altitude - forestTopTransitionAltitude;
+
+    if (bgY >= canvasHeight) {
+        bgY -= canvasHeight;
+    }
 
     ctx.save();
     // The translation now uses bgY and will wrap around, creating an infinite scroll.
@@ -295,18 +312,19 @@ function gameLoop(timestamp) {
     requestAnimationFrame(gameLoop);
 }
 
-function handleInput(x) {
+function handleInput(x, y) {
     if (gameState === 'playing') {
         targetX = x;
+        targetY = y;
     }
 }
 
 // Event Listeners
 window.addEventListener('resize', resizeCanvas);
 
-canvas.addEventListener('pointerdown', (e) => handleInput(e.clientX));
+canvas.addEventListener('pointerdown', (e) => handleInput(e.clientX, e.clientY));
 canvas.addEventListener('pointermove', (e) => {
-    if(e.buttons > 0) handleInput(e.clientX);
+    if(e.buttons > 0) handleInput(e.clientX, e.clientY);
 });
 
 charSelectionScreen.addEventListener('click', (e) => {
@@ -336,4 +354,3 @@ loadAssets().then(() => {
     lastTime = performance.now();
     requestAnimationFrame(gameLoop);
 });
-
