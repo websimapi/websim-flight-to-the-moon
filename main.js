@@ -18,7 +18,7 @@ const BIRD_STATS = {
 };
 
 const LEVELS = {
-    FOREST: { altitude: 0, bg: 'forest_bg.png', obstacle: 'nut.png', obsSpeed: 200, speedMultiplier: 1.0 },
+    FOREST: { altitude: 0, bg: 'forest_bg.png', obstacle: 'nut.png', obsSpeed: 200, speedMultiplier: 0.5 },
     SKY: { altitude: 1000, bg: 'sky_bg.png', obstacle: 'raindrop.png', obsSpeed: 350, speedMultiplier: 1.5 },
     SPACE: { altitude: 5000, bg: 'space_bg.png', obstacle: 'asteroid.png', obsSpeed: 500, speedMultiplier: 2.0 },
     MOON: { altitude: 15000 }
